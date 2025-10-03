@@ -27,13 +27,21 @@ pipeline {
                 script {
                     // Tạo và kích hoạt môi trường ảo Python
                     // Điều này giúp cô lập dependencies của project
-                    sh "scl enable rh-python38 'python -m venv venv'"
-                    echo "Setting up Python virtual environment..."
                     sh """
                         scl enable rh-python38 '
-                            . venv/bin/activate && \\
-                            python -m pip install --upgrade pip && \\
+                            echo "--- Inside SCL environment ---"
+                            
+                            # 1. Tạo môi trường ảo (sẽ dùng python 3.8)
+                            python -m venv venv
+                            
+                            # 2. Kích hoạt môi trường ảo
+                            source venv/bin/activate
+                            
+                            # 3. Nâng cấp pip và cài đặt thư viện
+                            python -m pip install --upgrade pip
                             pip install -r requirements.txt
+                            
+                            echo "--- Environment setup complete ---"
                         '
                     """
                 }
