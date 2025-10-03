@@ -12,12 +12,12 @@ pipeline {
         
         // Các đường dẫn này sẽ là đường dẫn bên trong workspace của Jenkins
         // Jenkins sẽ tự động tạo một thư mục làm việc (workspace) cho mỗi job
-        REPO_PATH = "${env.WORKSPACE}/outsource"
-        DEST_PATH = "${env.WORKSPACE}/outsource_cleaned"
-        JSON_PATH = "${env.WORKSPACE}/ProvinceRules.json"
-        COMMIT_PATH = "${env.WORKSPACE}/commit_message.txt"
-        DEPLOY_REPO = "${env.WORKSPACE}/PM2_VNPTHISL2_DEPLOY"
-        GIT_BRANCH = "UPCODE_VTT"
+        // REPO_PATH = "${env.WORKSPACE}/outsource"
+        // DEST_PATH = "${env.WORKSPACE}/outsource_cleaned"
+        // JSON_PATH = "${env.WORKSPACE}/ProvinceRules.json"
+        // COMMIT_PATH = "${env.WORKSPACE}/commit_message.txt"
+        // DEPLOY_REPO = "${env.WORKSPACE}/PM2_VNPTHISL2_DEPLOY"
+        // GIT_BRANCH = "UPCODE_VTT"
     }
 
     stages {
@@ -32,7 +32,7 @@ pipeline {
                     
                     echo "Installing dependencies..."
                     // Sử dụng `sh` để chạy lệnh shell
-                    sh ". venv/bin/activate && pip3 install -r requirements.txt"
+                    sh ". venv/bin/activate && pip install -r requirements.txt"
                 }
             }
         }
