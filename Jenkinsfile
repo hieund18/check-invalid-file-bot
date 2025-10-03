@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     triggers {
-        pollSCM('H/15 * * * *')   // check repo mỗi 15 phút
+        pollSCM('H/5 * * * *')   // check repo mỗi 5 phút
     }
 
     environment {
