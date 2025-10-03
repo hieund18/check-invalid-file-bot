@@ -85,15 +85,20 @@ pipeline {
         success {
             script {
                 echo "Pipeline thành công! Đang gửi thông báo..."
-                // Tạo nội dung tin nhắn
-                def successMessage = "✅ **[THÀNH CÔNG]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã khởi động lại Bot thành công."
                 
-                // Gửi tin nhắn bằng lệnh sh với curl
-                sh """
-                    curl -s -X POST -H 'Content-Type: application/json' \
-                         -d '{"chat_id": "-4960856865", "text": "${successMessage}", "parse_mode": "Markdown"}' \
-                         "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"
-                """
+                // Sử dụng withCredentials để truy cập biến BOT_TOKEN một cách an toàn
+                withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                    // Tạo nội dung tin nhắn
+                    def successMessage = "✅ **[THÀNH CÔNG]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã khởi động lại Bot thành công."
+                    
+                    // Gửi tin nhắn bằng lệnh sh với curl
+                    // Biến TELEGRAM_TOKEN bây giờ là một biến môi trường thông thường, an toàn để sử dụng
+                    sh """
+                        curl -s -X POST -H 'Content-Type: application/json' \
+                            -d '{"chat_id": "-4960856865", "text": "${successMessage}", "parse_mode": "Markdown"}' \
+                            "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                    """
+                }
             }
         }
         
@@ -101,15 +106,18 @@ pipeline {
         failure {
             script {
                 echo "Pipeline thất bại! Đang gửi thông báo..."
-                // Tạo nội dung tin nhắn
-                def failureMessage = "❌ **[THẤT BẠI]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã gặp lỗi.\nXem chi tiết tại: ${env.BUILD_URL}"
-                
-                // Gửi tin nhắn bằng lệnh sh với curl
-                sh """
-                    curl -s -X POST -H 'Content-Type: application/json' \
-                         -d '{"chat_id": "-4960856865", "text": "${failureMessage}", "parse_mode": "Markdown"}' \
-                         "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"
-                """
+
+                withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                    // Tạo nội dung tin nhắn
+                    def failureMessage = "❌ **[THẤT BẠI]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã gặp lỗi.\nXem chi tiết tại: ${env.BUILD_URL}"
+                    
+                    // Gửi tin nhắn bằng lệnh sh với curl
+                    sh """
+                        curl -s -X POST -H 'Content-Type: application/json' \
+                            -d '{"chat_id": "-4960856865", "text": "${failureMessage}", "parse_mode": "Markdown"}' \
+                            "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                    """
+                }
             }
         }
     }
