@@ -72,26 +72,26 @@ pipeline {
         //     }
         // }
 
-        stage('Prepare Deploy Repo') {
-            steps {
-                sh """
-                    echo ">>> Đang chuẩn bị kho deploy (DEPLOY_REPO)..."
+        // stage('Prepare Deploy Repo') {
+        //     steps {
+        //         sh """
+        //             echo ">>> Đang chuẩn bị kho deploy (DEPLOY_REPO)..."
 
-                    DEPLOY_REPO_URL="https://scm.devops.vnpt.vn/scm.ehealth.it/PM2_VNPTHISL2_DEPLOY.git"
+        //             DEPLOY_REPO_URL="https://scm.devops.vnpt.vn/scm.ehealth.it/PM2_VNPTHISL2_DEPLOY.git"
 
-                    if [ -d "${DEPLOY_REPO}" ]; then
-                      echo "Thư mục deploy đã tồn tại. Đang cập nhật..."
-                      cd "${DEPLOY_REPO}"
-                      git pull
-                    else
-                      echo "Thư mục deploy chưa tồn tại. Đang clone..."
-                      git clone "${DEPLOY_REPO_URL}" "${DEPLOY_REPO}"
-                    fi
+        //             if [ -d "${DEPLOY_REPO}" ]; then
+        //               echo "Thư mục deploy đã tồn tại. Đang cập nhật..."
+        //               cd "${DEPLOY_REPO}"
+        //               git pull
+        //             else
+        //               echo "Thư mục deploy chưa tồn tại. Đang clone..."
+        //               git clone "${DEPLOY_REPO_URL}" "${DEPLOY_REPO}"
+        //             fi
 
-                    echo ">>> Kho deploy đã sẵn sàng."
-                """
-            }
-        }
+        //             echo ">>> Kho deploy đã sẵn sàng."
+        //         """
+        //     }
+        // }
 
         // Giai đoạn 3: Chạy Bot
         stage('Run Telegram Bot') {
