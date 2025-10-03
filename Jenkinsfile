@@ -28,11 +28,11 @@ pipeline {
                     // Tạo và kích hoạt môi trường ảo Python
                     // Điều này giúp cô lập dependencies của project
                     echo "Setting up Python virtual environment..."
-                    sh "python3 -m venv venv"
-                    
-                    echo "Installing dependencies..."
-                    // Sử dụng `sh` để chạy lệnh shell
-                    sh ". venv/bin/activate && pip install -r requirements.txt"
+                    sh '''
+                        python3 -m venv venv
+                        venv/bin/pip install --upgrade pip setuptools wheel
+                        venv/bin/pip install -r requirements.txt
+                    '''
                 }
             }
         }
