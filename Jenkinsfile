@@ -27,12 +27,15 @@ pipeline {
                 script {
                     // Tạo và kích hoạt môi trường ảo Python
                     // Điều này giúp cô lập dependencies của project
+                    sh "scl enable rh-python38 'python -m venv venv'"
                     echo "Setting up Python virtual environment..."
-                    sh '''
-                        python3 -m venv venv
-                        venv/bin/pip install --upgrade pip setuptools wheel
-                        venv/bin/pip install -r requirements.txt
-                    '''
+                    sh """
+                        scl enable rh-python38 '
+                            . venv/bin/activate && \\
+                            python -m pip install --upgrade pip && \\
+                            pip install -r requirements.txt
+                        '
+                    """
                 }
             }
         }
@@ -74,7 +77,7 @@ pipeline {
                     // Chạy bot trong nền (background) bằng `nohup` và `&`
                     // Jenkins job sẽ không bị "treo" ở bước này và có thể kết thúc
                     // Log của bot sẽ được ghi vào file bot.log
-                    sh "nohup . venv/bin/activate && python3 CheckInvalidFile.py > bot.log 2>&1 &"
+                    sh "scl enable rh-python38 'nohup . venv/bin/activate && python ${SCRIPT_NAME} > bot.log 2>&1 &'"
                 }
             }
         }
