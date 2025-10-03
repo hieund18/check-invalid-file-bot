@@ -90,7 +90,7 @@ pipeline {
                     // Chạy bot trong nền (background) bằng `nohup` và `&`
                     // Jenkins job sẽ không bị "treo" ở bước này và có thể kết thúc
                     // Log của bot sẽ được ghi vào file bot.log
-                    sh "scl enable rh-python38 'nohup venv/bin/activate && python ${SCRIPT_NAME} > bot.log 2>&1 &'"
+                    sh "scl enable rh-python38 'nohup venv/bin/python CheckInvalidFile.py > bot.log 2>&1 &'"
                 }
             }
         }
