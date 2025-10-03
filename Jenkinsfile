@@ -31,6 +31,9 @@ pipeline {
                         scl enable rh-python38 '
                             echo "--- Inside SCL environment ---"
                             
+                            # XÓA MÔI TRƯỜNG ẢO CŨ ĐỂ ĐẢM BẢO SẠCH SẼ
+                            rm -rf venv
+
                             # 1. Tạo môi trường ảo (sẽ dùng python 3.8)
                             python -m venv venv
                             
@@ -79,6 +82,8 @@ pipeline {
                     echo "Stopping any previous running bot instance..."
                     // Tìm và dừng tiến trình bot cũ nếu có, để tránh chạy nhiều con bot cùng lúc
                     // Lệnh `|| true` để job không bị lỗi nếu không tìm thấy tiến trình nào
+                    def SCRIPT_NAME = 'CheckInvalidFile.py' 
+
                     sh "pkill -f 'CheckInvalidFile.py' || true"
                     
                     echo "Starting the bot in the background..."
