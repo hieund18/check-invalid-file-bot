@@ -1,0 +1,8 @@
+Cài đặt SCL
+sudo yum install centos-release-scl -y
+
+Cài đặt gói Python 3.8
+sudo yum install rh-python38 -y
+
+Kiểm tra
+scl enable rh-python38 'python --version'

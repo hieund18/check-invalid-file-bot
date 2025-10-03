@@ -12,12 +12,11 @@ pipeline {
         
         // Các đường dẫn này sẽ là đường dẫn bên trong workspace của Jenkins
         // Jenkins sẽ tự động tạo một thư mục làm việc (workspace) cho mỗi job
-        // REPO_PATH = "${env.WORKSPACE}/outsource"
-        // DEST_PATH = "${env.WORKSPACE}/outsource_cleaned"
-        // JSON_PATH = "${env.WORKSPACE}/ProvinceRules.json"
-        // COMMIT_PATH = "${env.WORKSPACE}/commit_message.txt"
-        // DEPLOY_REPO = "${env.WORKSPACE}/PM2_VNPTHISL2_DEPLOY"
-        // GIT_BRANCH = "UPCODE_VTT"
+        REPO_PATH = "${env.WORKSPACE}/outsource"
+        DEST_PATH = "${env.WORKSPACE}/outsource_cleaned"
+        JSON_PATH = "${env.WORKSPACE}/ProvinceRules.json"
+        DEPLOY_REPO = "${env.WORKSPACE}/PM2_VNPTHISL2_DEPLOY"
+        GIT_BRANCH = "UPCODE_VTT"
     }
 
     stages {
@@ -51,29 +50,48 @@ pipeline {
             }
         }
 
-        // stage('Prepare Deploy Repo') {
-        //     steps {
-        //         // Sử dụng sh '''...''' để chứa nhiều dòng lệnh shell
-        //         sh '''
-        //             echo ">>> Đang chuẩn bị kho deploy (DEPLOY_REPO)..."
+        stage('Prepare Source Repo (REPO_PATH)') {
+            steps {
+                sh """
+                    echo ">>> Đang chuẩn bị kho nguồn (REPO_PATH)..."
+                    
+                    SOURCE_REPO_URL="http://10.168.3.145:8887/outsource.git"
+                    SOURCE_BRANCH="UPCODE_VTT"
 
-        //             # <-- THAY ĐỔI URL NÀY CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN
-        //             DEPLOY_REPO_URL="https://scm.devops.vnpt.vn/scm.ehealth.it/PM2_VNPTHISL2_DEPLOY.git"
+                    if [ -d "${REPO_PATH}" ]; then
+                      echo "Thư mục nguồn đã tồn tại. Đang cập nhật..."
+                      cd "${REPO_PATH}"
+                      git checkout "${SOURCE_BRANCH}"
+                      git pull
+                    else
+                      echo "Thư mục nguồn chưa tồn tại. Đang clone nhánh ${SOURCE_BRANCH}..."
+                      git clone -b "${SOURCE_BRANCH}" "${SOURCE_REPO_URL}" "${REPO_PATH}"
+                    fi
+                    echo ">>> Kho nguồn đã sẵn sàng."
+                """
+            }
+        }
 
-        //             # Logic: Nếu thư mục chưa tồn tại thì clone, nếu đã tồn tại thì pull
-        //             if [ -d "${DEPLOY_REPO}" ]; then
-        //               echo "Thư mục deploy đã tồn tại. Đang cập nhật..."
-        //               cd "${DEPLOY_REPO}"
-        //               git pull
-        //             else
-        //               echo "Thư mục deploy chưa tồn tại. Đang clone..."
-        //               git clone "${DEPLOY_REPO_URL}" "${DEPLOY_REPO}"
-        //             fi
+        stage('Prepare Deploy Repo') {
+            steps {
+                sh """
+                    echo ">>> Đang chuẩn bị kho deploy (DEPLOY_REPO)..."
 
-        //             echo ">>> Kho deploy đã sẵn sàng."
-        //         '''
-        //     }
-        // }
+                    DEPLOY_REPO_URL="https://scm.devops.vnpt.vn/scm.ehealth.it/PM2_VNPTHISL2_DEPLOY.git"
+
+                    if [ -d "${DEPLOY_REPO}" ]; then
+                      echo "Thư mục deploy đã tồn tại. Đang cập nhật..."
+                      cd "${DEPLOY_REPO}"
+                      git pull
+                    else
+                      echo "Thư mục deploy chưa tồn tại. Đang clone..."
+                      git clone "${DEPLOY_REPO_URL}" "${DEPLOY_REPO}"
+                    fi
+
+                    echo ">>> Kho deploy đã sẵn sàng."
+                """
+            }
+        }
 
         // Giai đoạn 3: Chạy Bot
         stage('Run Telegram Bot') {
@@ -88,7 +106,6 @@ pipeline {
                     
                     echo "Starting the bot in the background..."
                     // Chạy bot trong nền (background) bằng `nohup` và `&`
-                    // Jenkins job sẽ không bị "treo" ở bước này và có thể kết thúc
                     // Log của bot sẽ được ghi vào file bot.log
                     sh "scl enable rh-python38 'nohup venv/bin/python CheckInvalidFile.py > bot.log 2>&1 &'"
                 }
@@ -107,8 +124,6 @@ pipeline {
                     // Tạo nội dung tin nhắn
                     def successMessage = "✅ **[THÀNH CÔNG]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã khởi động lại Bot thành công."
                     
-                    // Gửi tin nhắn bằng lệnh sh với curl
-                    // Biến TELEGRAM_TOKEN bây giờ là một biến môi trường thông thường, an toàn để sử dụng
                     sh """
                         curl -s -X POST -H 'Content-Type: application/json' \
                             -d '{"chat_id": "-4960856865", "text": "${successMessage}", "parse_mode": "Markdown"}' \
@@ -127,7 +142,6 @@ pipeline {
                     // Tạo nội dung tin nhắn
                     def failureMessage = "❌ **[THẤT BẠI]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã gặp lỗi.\nXem chi tiết tại: ${env.BUILD_URL}"
                     
-                    // Gửi tin nhắn bằng lệnh sh với curl
                     sh """
                         curl -s -X POST -H 'Content-Type: application/json' \
                             -d '{"chat_id": "-4960856865", "text": "${failureMessage}", "parse_mode": "Markdown"}' \
