@@ -6,9 +6,9 @@ pipeline {
     }
 
     environment {
-        // Định nghĩa các biến môi trường ở đây
         // Sử dụng Jenkins Credentials để lưu trữ token một cách an toàn
         BOT_TOKEN = credentials('BOT_TOKEN')
+        TELEGRAM_CHAT_ID = "-4960856865"
         
         // Các đường dẫn này sẽ là đường dẫn bên trong workspace của Jenkins
         // Jenkins sẽ tự động tạo một thư mục làm việc (workspace) cho mỗi job
@@ -23,28 +23,32 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 script {
-                    // Tạo và kích hoạt môi trường ảo Python
-                    // Điều này giúp cô lập dependencies của project
-                    sh """
-                        scl enable rh-python38 '
-                            echo "--- Inside SCL environment ---"
-                            
-                            # XÓA MÔI TRƯỜNG ẢO CŨ ĐỂ ĐẢM BẢO SẠCH SẼ
-                            rm -rf venv
-
-                            # 1. Tạo môi trường ảo (sẽ dùng python 3.8)
-                            python -m venv venv
-                            
-                            # 2. Kích hoạt môi trường ảo
-                            source venv/bin/activate
-                            
-                            # 3. Nâng cấp pip và cài đặt thư viện
-                            python -m pip install --upgrade pip
-                            pip install -r requirements.txt
-                            
-                            echo "--- Environment setup complete ---"
-                        '
-                    """
+                    try {
+                        sh """
+                            scl enable rh-python38 '
+                                echo "--- Inside SCL environment ---"
+                                rm -rf venv
+                                python -m venv venv
+                                source venv/bin/activate
+                                python -m pip install --upgrade pip
+                                pip install -r requirements.txt
+                                echo "--- Environment setup complete ---"
+                            '
+                        """
+                    } catch (e) {
+                        echo "Lỗi xảy ra trong stage Setup Environment!"
+                        def errorMessage = "❌ **[LỖI MÔI TRƯỜDNG]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi cài đặt thư viện.\n\n**Chi tiết:**\n`${e.getMessage()}`"
+                        
+                        withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                            sh """
+                                curl -s -X POST -H 'Content-Type: application/json' \
+                                     -d '{"chat_id": "-4960856865", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
+                                     "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                            """
+                        }
+                        
+                        error "Build failed in Setup Environment stage"
+                    }
                 }
             }
         }
@@ -71,11 +75,9 @@ pipeline {
                             echo ">>> Kho nguồn đã sẵn sàng."
                         """
                     } catch (e) {
-                        // Nếu có lỗi, thực hiện các hành động trong này
                         echo "Lỗi xảy ra trong stage Prepare Source Repo!"
                         def errorMessage = "❌ **[LỖI khi chuẩn bị source repo]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi cài đặt thư viện.\n\n**Chi tiết:**\n`${e.getMessage()}`"
                         
-                        // Gửi thông báo lỗi cụ thể
                         withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
                             sh """
                                 curl -s -X POST -H 'Content-Type: application/json' \
@@ -84,7 +86,6 @@ pipeline {
                             """
                         }
                         
-                        // Làm pipeline thất bại một cách tường minh
                         error "Build failed in Setup Environment stage"
                     }
                 }
@@ -145,7 +146,7 @@ pipeline {
                     
                     sh """
                         curl -s -X POST -H 'Content-Type: application/json' \
-                            -d '{"chat_id": "-4960856865", "text": "${successMessage}", "parse_mode": "Markdown"}' \
+                            -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "${successMessage}", "parse_mode": "Markdown"}' \
                             "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
                     """
                 }
@@ -163,7 +164,7 @@ pipeline {
                     
                     sh """
                         curl -s -X POST -H 'Content-Type: application/json' \
-                            -d '{"chat_id": "-4960856865", "text": "${failureMessage}", "parse_mode": "Markdown"}' \
+                            -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "${failureMessage}", "parse_mode": "Markdown"}' \
                             "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
                     """
                 }
