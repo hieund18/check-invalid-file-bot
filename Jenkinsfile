@@ -76,7 +76,7 @@ pipeline {
                         """
                     } catch (e) {
                         echo "Lỗi xảy ra trong stage Prepare Source Repo!"
-                        def errorMessage = "❌ **[LỖI khi chuẩn bị source repo]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi cài đặt thư viện.\n\n**Chi tiết:**\n`${e.getMessage()}`"
+                        def errorMessage = "❌ **[LỖI khi chuẩn bị source repo]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi chuẩn bị source repo.\n\n**Chi tiết:**\n`${e.getMessage()}`"
                         
                         withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
                             sh """
