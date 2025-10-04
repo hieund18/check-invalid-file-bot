@@ -42,7 +42,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
                             sh """
                                 curl -s -X POST -H 'Content-Type: application/json' \
-                                     -d '{"chat_id": "-4960856865", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
+                                     -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
                                      "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
                             """
                         }
@@ -81,7 +81,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
                             sh """
                                 curl -s -X POST -H 'Content-Type: application/json' \
-                                     -d '{"chat_id": "-4960856865", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
+                                     -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
                                      "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
                             """
                         }
