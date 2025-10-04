@@ -20,7 +20,6 @@ pipeline {
     }
 
     stages {
-        // Giai đoạn 1: Cài đặt môi trường
         stage('Setup Environment') {
             steps {
                 script {
@@ -50,27 +49,48 @@ pipeline {
             }
         }
 
-        // stage('Prepare Source Repo (REPO_PATH)') {
-        //     steps {
-        //         sh """
-        //             echo ">>> Đang chuẩn bị kho nguồn (REPO_PATH)..."
-                    
-        //             SOURCE_REPO_URL="http://10.168.3.145:8887/outsource.git"
-        //             SOURCE_BRANCH="UPCODE_VTT"
+        stage('Prepare Source Repo (REPO_PATH)') {
+            steps {
+                script{
+                    try{
+                        sh """
+                            echo ">>> Đang chuẩn bị kho nguồn (REPO_PATH)..."
+                            
+                            SOURCE_REPO_URL="http://10.168.3.145:8887/outsource.git"
+                            SOURCE_BRANCH="UPCODE_VTT"
 
-        //             if [ -d "${REPO_PATH}" ]; then
-        //               echo "Thư mục nguồn đã tồn tại. Đang cập nhật..."
-        //               cd "${REPO_PATH}"
-        //               git checkout "${SOURCE_BRANCH}"
-        //               git pull
-        //             else
-        //               echo "Thư mục nguồn chưa tồn tại. Đang clone nhánh ${SOURCE_BRANCH}..."
-        //               git clone -b "${SOURCE_BRANCH}" "${SOURCE_REPO_URL}" "${REPO_PATH}"
-        //             fi
-        //             echo ">>> Kho nguồn đã sẵn sàng."
-        //         """
-        //     }
-        // }
+                            if [ -d "${REPO_PATH}" ]; then
+                            echo "Thư mục nguồn đã tồn tại. Đang cập nhật..."
+                            cd "${REPO_PATH}"
+                            git checkout "${SOURCE_BRANCH}"
+                            git pull
+                            else
+                            echo "Thư mục nguồn chưa tồn tại. Đang clone nhánh ${SOURCE_BRANCH}..."
+                            git clone -b "${SOURCE_BRANCH}" "${SOURCE_REPO_URL}" "${REPO_PATH}"
+                            fi
+                            echo ">>> Kho nguồn đã sẵn sàng."
+                        """
+                    } catch (e) {
+                        // Nếu có lỗi, thực hiện các hành động trong này
+                        echo "Lỗi xảy ra trong stage Prepare Source Repo!"
+                        def errorMessage = "❌ **[LỖI khi chuẩn bị source repo]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi cài đặt thư viện.\n\n**Chi tiết:**\n`${e.getMessage()}`"
+                        
+                        // Gửi thông báo lỗi cụ thể
+                        withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                            sh """
+                                curl -s -X POST -H 'Content-Type: application/json' \
+                                     -d '{"chat_id": "-4960856865", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
+                                     "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                            """
+                        }
+                        
+                        // Làm pipeline thất bại một cách tường minh
+                        error "Build failed in Setup Environment stage"
+                    }
+                }
+                
+            }
+        }
 
         // stage('Prepare Deploy Repo') {
         //     steps {
@@ -93,7 +113,6 @@ pipeline {
         //     }
         // }
 
-        // Giai đoạn 3: Chạy Bot
         stage('Run Telegram Bot') {
             steps {
                 script {
