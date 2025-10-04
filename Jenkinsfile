@@ -128,7 +128,12 @@ pipeline {
                         echo "Starting the bot in the background..."
                         // Chạy bot trong nền (background) bằng `nohup` và `&`
                         // Log của bot sẽ được ghi vào file bot.log
-                        sh "scl enable rh-python38 'nohup venv/bin/python ${SCRIPT_NAME} > bot.log 2>&1 &'"
+                        sh """
+                            scl enable rh-python38 '
+                                source venv/bin/activate && \\
+                                nohup python ${SCRIPT_NAME} > bot.log 2>&1 &
+                            '
+                        """
                     } catch (e) {
                         echo "Lỗi xảy ra trong stage Run Telegram Bot!"
                         def errorMessage = "❌ **[LỖI KHỞI ĐỘNG BOT]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi khởi động bot.\n\n**Chi tiết:**\n`${e.getMessage()}`"
