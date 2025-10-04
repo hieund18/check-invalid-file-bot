@@ -60,13 +60,13 @@ pipeline {
                             SOURCE_BRANCH="UPCODE_VTT"
 
                             if [ -d "${REPO_PATH}" ]; then
-                            echo "Thư mục nguồn đã tồn tại. Đang cập nhật..."
-                            cd "${REPO_PATH}"
-                            git checkout "${SOURCE_BRANCH}"
-                            git pull
+                                echo "Thư mục nguồn đã tồn tại. Đang cập nhật..."
+                                cd "${REPO_PATH}"
+                                git checkout "${SOURCE_BRANCH}"
+                                git pull
                             else
-                            echo "Thư mục nguồn chưa tồn tại. Đang clone nhánh ${SOURCE_BRANCH}..."
-                            git clone -b "${SOURCE_BRANCH}" "${SOURCE_REPO_URL}" "${REPO_PATH}"
+                                echo "Thư mục nguồn chưa tồn tại. Đang clone nhánh ${SOURCE_BRANCH}..."
+                                git clone -b "${SOURCE_BRANCH}" "${SOURCE_REPO_URL}" "${REPO_PATH}"
                             fi
                             echo ">>> Kho nguồn đã sẵn sàng."
                         """
