@@ -117,17 +117,33 @@ pipeline {
         stage('Run Telegram Bot') {
             steps {
                 script {
-                    echo "Stopping any previous running bot instance..."
-                    // Tìm và dừng tiến trình bot cũ nếu có, để tránh chạy nhiều con bot cùng lúc
-                    // Lệnh `|| true` để job không bị lỗi nếu không tìm thấy tiến trình nào
-                    def SCRIPT_NAME = 'CheckInvalidFile.py' 
+                    try{
+                        echo "Stopping any previous running bot instance..."
+                        // Tìm và dừng tiến trình bot cũ nếu có, để tránh chạy nhiều con bot cùng lúc
+                        // Lệnh `|| true` để job không bị lỗi nếu không tìm thấy tiến trình nào
+                        def SCRIPT_NAME = 'CheckInvalidFile.py' 
 
-                    sh "pkill -f 'CheckInvalidFile.py' || true"
+                        sh "pkill -f '${SCRIPT_NAME}' || true"
+                        
+                        echo "Starting the bot in the background..."
+                        // Chạy bot trong nền (background) bằng `nohup` và `&`
+                        // Log của bot sẽ được ghi vào file bot.log
+                        sh "scl enable rh-python38 'nohup venv/bin/python ${SCRIPT_NAME} > bot.log 2>&1 &'"
+                    } catch (e) {
+                        echo "Lỗi xảy ra trong stage Run Telegram Bot!"
+                        def errorMessage = "❌ **[LỖI KHỞI ĐỘNG BOT]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi khởi động bot.\n\n**Chi tiết:**\n`${e.getMessage()}`"
+                        
+                        withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                            sh """
+                                curl -s -X POST -H 'Content-Type: application/json' \
+                                     -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "${errorMessage}", "parse_mode": "Markdown"}' \
+                                     "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                            """
+                        }
+                        
+                        error "Failed to run the bot"
+                    }
                     
-                    echo "Starting the bot in the background..."
-                    // Chạy bot trong nền (background) bằng `nohup` và `&`
-                    // Log của bot sẽ được ghi vào file bot.log
-                    sh "scl enable rh-python38 'nohup venv/bin/python CheckInvalidFile.py > bot.log 2>&1 &'"
                 }
             }
         }
@@ -139,9 +155,7 @@ pipeline {
             script {
                 echo "Pipeline thành công! Đang gửi thông báo..."
                 
-                // Sử dụng withCredentials để truy cập biến BOT_TOKEN một cách an toàn
                 withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
-                    // Tạo nội dung tin nhắn
                     def successMessage = "✅ **[THÀNH CÔNG]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã khởi động lại Bot thành công."
                     
                     sh """
@@ -159,7 +173,6 @@ pipeline {
                 echo "Pipeline thất bại! Đang gửi thông báo..."
 
                 withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
-                    // Tạo nội dung tin nhắn
                     def failureMessage = "❌ **[THẤT BẠI]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã gặp lỗi.\nXem chi tiết tại: ${env.BUILD_URL}"
                     
                     sh """
