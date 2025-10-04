@@ -134,6 +134,33 @@ pipeline {
                                 nohup python ${SCRIPT_NAME} > bot.log 2>&1 &
                             '
                         """
+
+                        sh "sleep 5"
+                        def checkResult = sh(
+                            script: "ps -ef | grep ${SCRIPT_NAME} | grep -v grep || true",
+                            returnStdout: true
+                        ).trim()
+
+                        if (checkResult) {
+                            echo "Bot is running ✅"
+                            withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                                sh """
+                                    curl -s -X POST -H 'Content-Type: application/json' \
+                                        -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "✅ Bot đã khởi động thành công trên job *${env.JOB_NAME}* build *#${env.BUILD_NUMBER}*.", "parse_mode": "Markdown"}' \
+                                        "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                                """
+                            }
+                        } else {
+                            echo "Bot failed to start ❌"
+                            withCredentials([string(credentialsId: 'BOT_TOKEN', variable: 'TELEGRAM_TOKEN')]) {
+                                sh """
+                                    curl -s -X POST -H 'Content-Type: application/json' \
+                                        -d '{"chat_id": "${TELEGRAM_CHAT_ID}", "text": "❌ Bot KHÔNG chạy được sau khi start trên job *${env.JOB_NAME}* build *#${env.BUILD_NUMBER}*.", "parse_mode": "Markdown"}' \
+                                        "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"
+                                """
+                            }
+                            error "Bot did not start"
+                        }
                     } catch (e) {
                         echo "Lỗi xảy ra trong stage Run Telegram Bot!"
                         def errorMessage = "❌ **[LỖI KHỞI ĐỘNG BOT]** Job **'${env.JOB_NAME}'** build **#${env.BUILD_NUMBER}** đã thất bại khi khởi động bot.\n\n**Chi tiết:**\n`${e.getMessage()}`"
