@@ -1,3 +1,4 @@
+#Cài môi trường
 Cài đặt SCL
 sudo yum install centos-release-scl -y
 
@@ -6,3 +7,22 @@ sudo yum install rh-python38 -y
 
 Kiểm tra
 scl enable rh-python38 'python --version'
+
+### chạy bot
+#Tải lại cấu hình systemd
+sudo systemctl daemon-reload
+
+sudo systemctl enable telegram-bot 
+
+#Khởi động lại service
+sudo systemctl restart telegram-bot.service
+
+#Kiểm tra trạng thái để chắc chắn nó đang chạy
+sudo systemctl status telegram-bot.service
+
+#Dừng bot
+sudo systemctl stop telegram-bot
+
+#Tắt auto-start khi reboot
+sudo systemctl disable telegram-bot
+
