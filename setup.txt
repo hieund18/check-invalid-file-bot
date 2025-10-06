@@ -8,6 +8,12 @@ sudo yum install rh-python38 -y
 Kiểm tra
 scl enable rh-python38 'python --version'
 
+
+##Cập nhật file telegram-bot.service
+sudo nano /etc/systemd/system/telegram-bot.service
+
+dán file telegram-bot.service
+
 ### chạy bot
 #Tải lại cấu hình systemd
 sudo systemctl daemon-reload

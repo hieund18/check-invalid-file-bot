@@ -3,17 +3,9 @@ Description=My Telegram Bot Service
 After=network.target
 
 [Service]
-# Chạy service bằng user jenkins để có quyền truy cập workspace
-# Đây là một thực hành tốt về bảo mật.
 User=root
-
-# Đường dẫn workspace chính xác của job
 WorkingDirectory=/etc/tool/check-invalid-file-bot
-
-# Lệnh để khởi động bot, đảm bảo đường dẫn đầy đủ và đúng cú pháp
 ExecStart=/etc/tool/check-invalid-file-bot/venv/bin/python /etc/tool/check-invalid-file-bot/CheckInvalidFile.py
-
-# Tự động khởi động lại bot nếu nó bị lỗi
 Restart=always
 RestartSec=3
 
