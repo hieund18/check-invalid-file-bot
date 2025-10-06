@@ -2,7 +2,12 @@ pipeline {
     agent any
 
     triggers {
-        pollSCM('H/5 * * * *')   // check repo mỗi 5 phút
+        pollSCM('H/15 * * * *')   // check repo mỗi 15 phút
+    }
+
+    parameters {
+        string(name: 'TIME_DEPLOY', defaultValue: '17H19', description: 'Thời gian deploy')
+        string(name: 'COMMIT_MESSAGE', defaultValue: 'Auto deploy from Telegram bot', description: 'Nội dung commit')
     }
 
     environment {

@@ -9,11 +9,11 @@ from git import Repo
 
 # === Config ===
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7664663330:AAGk132lgzUlSlKPtHYTds5GHtvuLEjvfRM")
-REPO_PATH = os.getenv("REPO_PATH", "/var/lib/jenkins/workspace/check-invalid-file-bot/outsource")
-DEST_PATH = os.getenv("DEST_PATH", "/var/lib/jenkins/workspace/check-invalid-file-bot/outsource_cleaned")
-JSON_PATH = os.getenv("JSON_PATH", "/var/lib/jenkins/workspace/check-invalid-file-bot/ProvinceRules.json")
-DEPLOY_REPO = os.getenv("DEPLOY_REPO", "/var/lib/jenkins/workspace/check-invalid-file-bot/PM2_VNPTHISL2_DEPLOY")
-GIT_BRANCH = os.getenv("GIT_BRANCH", "UPCODE_VTT")
+REPO_PATH = os.getenv("REPO_PATH")
+DEST_PATH = os.getenv("DEST_PATH")
+JSON_PATH = os.getenv("JSON_PATH")
+DEPLOY_REPO = os.getenv("DEPLOY_REPO")
+GIT_BRANCH = os.getenv("GIT_BRANCH")
 MAX_TELEGRAM_MESSAGE_LEN = 4000
 FORBIDDEN_SQL_KEYWORDS = ["update", "delete", "insert", "truncate", "drop"]
 # === Utility ===
