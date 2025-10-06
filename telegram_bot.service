@@ -8,10 +8,10 @@ After=network.target
 User=root
 
 # Đường dẫn workspace chính xác của job
-WorkingDirectory=/var/lib/jenkins/workspace/check-invalid-file-bot
+WorkingDirectory=/etc/tool/check-invalid-file-bot
 
 # Lệnh để khởi động bot, đảm bảo đường dẫn đầy đủ và đúng cú pháp
-ExecStart=/var/lib/jenkins/workspace/check-invalid-file-bot/venv/bin/python /var/lib/jenkins/workspace/check-invalid-file-bot/CheckInvalidFile.py
+ExecStart=/etc/tool/check-invalid-file-bot/venv/bin/python /etc/tool/check-invalid-file-bot/CheckInvalidFile.py
 
 # Tự động khởi động lại bot nếu nó bị lỗi
 Restart=always
