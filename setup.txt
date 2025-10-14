@@ -1,13 +1,24 @@
 #Cài môi trường
-Cài đặt SCL
+#Cài đặt SCL
 sudo yum install centos-release-scl -y
 
-Cài đặt gói Python 3.8
+#Cài đặt gói Python 3.8
 sudo yum install rh-python38 -y
 
-Kiểm tra
+#Kiểm tra
 scl enable rh-python38 'python --version'
 
+cd ... thu muc chua file
+
+#Cài môi trường ảo và thư viện
+rm -rf venv
+python -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+#Xóa nếu tồn tại
+sudo rm /etc/systemd/system/telegram-bot.service
 
 ##Cập nhật file telegram-bot.service
 sudo nano /etc/systemd/system/telegram-bot.service

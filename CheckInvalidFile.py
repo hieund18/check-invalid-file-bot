@@ -141,7 +141,18 @@ def copy_folder(src, dst):
 
 async def checkinvalidfile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    ma_tinh_filter = context.args[0].strip().lower() if context.args else None
+
+    time_flag = '0'
+    ma_tinh_filter = None
+    
+    if context.args:
+        arg1 = context.args[0].strip().lower()
+        if arg1 == '0' or re.match(r"^\d{2}h\d{2}$", arg1):
+            time_flag = arg1.upper()
+            if len(context.args) > 1:
+                ma_tinh_filter = context.args[1].strip().lower()
+        else:
+            ma_tinh_filter = arg1
     
     await context.bot.send_message(chat_id=chat_id, text="⏳ Đang cập nhật lại repo nguồn...")
     if not prepare_repo(REPO_PATH, SOURCE_REPO_URL, SOURCE_REPO_BRANCH):
@@ -157,17 +168,22 @@ async def checkinvalidfile_command(update: Update, context: ContextTypes.DEFAULT
         await update.message.reply_text(f"❌ Mã tỉnh `{ma_tinh_filter}` không hợp lệ. Vui lòng kiểm tra lại.")
         return
 
-    latest_folder = get_today_date_folder(REPO_PATH)
-    if not latest_folder:
-        await context.bot.send_message(chat_id=chat_id, text="❌ Không tìm thấy thư mục của ngày hôm nay trong repo nguồn.")
+    today_str = datetime.now().strftime("%Y%m%d")
+    if time_flag == '0':
+        target_folder = today_str
+    else:
+        target_folder = f"{today_str}_{time_flag}"
+
+    full_target_path = os.path.join(REPO_PATH, target_folder)
+    if not os.path.isdir(full_target_path):
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Không tìm thấy thư mục `{target_folder}` trong repo nguồn.")
         return
 
-    target_folder = latest_folder + "/"
     await context.bot.send_message(chat_id=chat_id, text=f"📂 Đang kiểm tra thư mục: `{target_folder}`")
     
     repo = Repo(REPO_PATH)
     all_files = repo.git.ls_files().splitlines()
-    filtered_files = [f for f in all_files if f.startswith(target_folder)]
+    filtered_files = [f for f in all_files if f.startswith(target_folder + "/")]
     report = []
     for file in filtered_files:
         commits = list(repo.iter_commits(paths=file, max_count=1))
@@ -197,24 +213,31 @@ async def checkinvalidfile_command(update: Update, context: ContextTypes.DEFAULT
     if current_msg.strip():
         await context.bot.send_message(chat_id=chat_id, text=current_msg.strip())
 
-
 async def upcode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    if len(context.args) < 2:
+    if len(context.args) < 3:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="❌ Cú pháp sai!\n/upcode <thời_gian> <commit_message>\n\nVí dụ: `/upcode 17H19 https://cntt.vnpt.vn/browse/IT360-1545724`"
+            text="❌ Cú pháp sai!\n/upcode <source_time> <deploy_time> <commit_message>\n\n"
+                 "Ví dụ:\n"
+                 "`/upcode 0 17H19 https://cntt.vnpt.vn/browse/IT360-1551227`\n"
+                 "`/upcode 18H01 18H09 https://cntt.vnpt.vn/browse/IT360-1551227`"
         )
         return
 
-    time_str = context.args[0].strip().upper()
-    commit_msg_today = " ".join(context.args[1:]).strip()
+    source_time = context.args[0].strip().upper()
+    deploy_time = context.args[1].strip().upper()
+    commit_msg_today = " ".join(context.args[2:]).strip()
 
-    if not re.match(r"^\d{2}H\d{2}$", time_str):
-        await context.bot.send_message(chat_id=chat_id, text=f"❌ Định dạng thời gian '{time_str}' không hợp lệ. Ví dụ: 17H19")
+    if not re.match(r"^(0|\d{2}H\d{2})$", source_time):
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Định dạng thời gian nguồn '{source_time}' không hợp lệ. Ví dụ: 0 hoặc 17H19")
         return
 
-    await context.bot.send_message(chat_id=chat_id, text=f"🚀 Bắt đầu deploy với thời gian `{time_str}`...")
+    if not re.match(r"^\d{2}H\d{2}$", deploy_time):
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Định dạng thời gian deploy '{deploy_time}' không hợp lệ. Ví dụ: 17H19")
+        return
+
+    await context.bot.send_message(chat_id=chat_id, text=f"🚀 Bắt đầu deploy với thời gian `{deploy_time}`...")
     
     # 1. Pull repo nguồn
     await context.bot.send_message(chat_id=chat_id, text="[1/6] ⏳ Đang cập nhật repo nguồn...")
@@ -223,14 +246,26 @@ async def upcode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await context.bot.send_message(chat_id=chat_id, text="✅ Repo nguồn đã được cập nhật.")
 
-    latest_folder = get_today_date_folder(REPO_PATH)
-    if not latest_folder:
-        await context.bot.send_message(chat_id=chat_id, text="❌ Không tìm thấy thư mục ngày hôm nay trong repo nguồn.")
+    # latest_folder = get_today_date_folder(REPO_PATH)
+    # if not latest_folder:
+    #     await context.bot.send_message(chat_id=chat_id, text="❌ Không tìm thấy thư mục ngày hôm nay trong repo nguồn.")
+    #     return
+    
+    today_str = datetime.now().strftime("%Y%m%d")
+    if source_time == '0':
+        latest_folder  = today_str
+    else:
+        latest_folder = f"{today_str}_{source_time}"
+        
+    # Kiểm tra xem thư mục nguồn có tồn tại không
+    original_path = os.path.join(REPO_PATH, latest_folder)
+    if not os.path.isdir(original_path):
+        await context.bot.send_message(chat_id=chat_id, text=f"❌ Không tìm thấy thư mục nguồn `{latest_folder}` trong repo nguồn.")
         return
 
     # 2. Copy sang thư mục làm sạch
     await context.bot.send_message(chat_id=chat_id, text=f"[2/6] 📂 Đang copy `{latest_folder}` để xử lý...")
-    original_path = os.path.join(REPO_PATH, latest_folder)
+    # original_path = os.path.join(REPO_PATH, latest_folder)
     cleaned_path = os.path.join(DEST_PATH, latest_folder)
     try:
         copy_folder(original_path, cleaned_path)
@@ -277,8 +312,8 @@ async def upcode_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 5. Copy vào các thư mục deploy
     await context.bot.send_message(chat_id=chat_id, text="[5/6] 🚀 Đang copy code sạch vào thư mục deploy...")
-    deploy_folders = [f"BVDAKHOA_{time_str}", f"BVLONGAN_{time_str}"]
-    target_latest_path = os.path.join(DEPLOY_REPO, latest_folder)
+    deploy_folders = [f"BVDAKHOA_{deploy_time}", f"BVLONGAN_{deploy_time}"]
+    target_latest_path = os.path.join(DEPLOY_REPO, today_str)
     for folder in deploy_folders:
         try:
             target_deploy_path = os.path.join(target_latest_path, folder)
